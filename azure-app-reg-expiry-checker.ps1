@@ -9,7 +9,6 @@ of business information, or other pecuniary loss) arising out of the use of or i
 Microsoft has been advised of the possibility of such damages.
 #>
 
-
 Function _SendToLogAnalytics{
     Param(
         [string]$customerId,
@@ -67,22 +66,10 @@ Function _SendToLogAnalytics{
         # Return the status code of the web request response
         return $response
 }
-
-
-#### End Function Declaration Section ##############################################################
-
-####Connect to the O365 Tenant using AutomationCredential###########################################
-
-Try{
-    $credentials = Get-AutomationPSCredential -Name "AppRegistrationMonitor" -ErrorAction Stop
-} catch {
-    write-error "Unable to find AutomationPSCredential"
-    throw "Unable to find AutomationPSCredential"
-}
+#### End Function Declaration Section
 
 Try {
-    $tenantID= Get-AutomationVariable -Name 'MonitoredTenantID'
-    Connect-AzAccount -ServicePrincipal -Credential $credentials -Tenant $tenantID
+    Connect-AzAccount -Identity
 } catch {
     write-error "$($_.Exception)"
     throw "$($_.Exception)"
@@ -92,7 +79,6 @@ Write-output 'Gathering necessary information...'
 $applications = Get-AzADApplication
 $servicePrincipals = Get-AzADServicePrincipal
 $timeStamp = Get-Date -format o
-
 
 $appWithCredentials = @()
 $appWithCredentials += $applications | Sort-Object -Property DisplayName | % {
@@ -124,8 +110,6 @@ $appWithCredentials | Sort-Object EndDate | % {
             $_ | Add-Member -MemberType NoteProperty -Name 'DaysToExpiration' -Value $days
         }
 }
-
-
 
 $audit = $appWithCredentials | convertto-json
 $customerId= Get-AutomationVariable -Name 'LogAnalyticsWorkspaceID'
